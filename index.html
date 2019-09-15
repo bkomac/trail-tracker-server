@@ -1,43 +1,89 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Cordova Background Geolocation Tracking</title>
-    <meta name="viewport" content="initial-scale=1.0">
-    <meta charset="utf-8">
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-      #map {
-        height: 100%;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script src="//maps.googleapis.com/maps/api/js?key={{API KEY HERE}}"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      var allMarkers = [];
-      var map = new google.maps.Map(document.getElementById('map'), {
-        center: {lat: -34.397, lng: 150.644},
-        zoom: 8
-      });
-      var socket = io('http://localhost:3000');
-      socket.on('locations', function(locations){
-        locations = locations || [];
-        var markers = locations.map(function(location) {
-          var marker = new google.maps.Marker({
-            position: {lat: location.latitude, lng: location.longitude},
-            map: map
-          });
-          map.setCenter(marker.getPosition());
-          return marker;
+
+<head>
+  <title>Cordova Background Geolocation Tracking</title>
+  <meta name="viewport" content="initial-scale=1.0">
+  <meta charset="utf-8">
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <script src="//maps.googleapis.com/maps/api/js?key=AIzaSyD-wFd-ug2VziTX-nwnp4n1PlsMwPA_UxM"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var lastLocation = {};
+    var previousLocation = {};
+    var lastMarker = {};
+    var accurracyMarker = {};
+    var color = "#ff0000";
+    var allMarkers = [];
+    var map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: 46.0676, lng: 14.4116 },
+      zoom: 16
+    });
+    var socket = io('http://node.komac.si:30000');
+    socket.on('locations', function (locations) {
+      locations = locations || [];
+      var markers = locations.map(function (location) {
+        console.log(new Date() + "loc: " + JSON.stringify(location));
+        lastLocation = location;
+        color = location.color;
+        var marker = new google.maps.Marker({
+          position: { lat: location.lat, lng: location.lon },
+          map: map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: '#f00',
+            fillOpacity: 0.1,
+            strokeColor: '#f00',
+            strokeOpacity: 0.6,
+            strokeWeight: 1,
+            scale: 3
+          }
         });
-        allMarkers = allMarkers.concat(markers);
+        map.setCenter(marker.getPosition());
+        return marker;
       });
-    </script>
-  </body>
+      allMarkers = allMarkers.concat(markers);
+      console.log("color=" + color);
+      try {
+        lastMarker.setMap(null);
+        accurracyMarker.setMap(null);
+      } catch (e) {
+      }
+
+      lastMarker = new google.maps.Marker({
+        position: { lat: lastLocation.lat, lng: lastLocation.lon },
+        map: map,
+        draggable: true,
+        color: "#00ff00"
+      });
+
+      accurracyMarker = new google.maps.Circle({
+        center: { lat: lastLocation.lat, lng: lastLocation.lon },
+        radius: lastLocation.accuracy,
+        map: map,
+        fillColor: '#00f',
+        fillOpacity: 0.05,
+        strokeColor: '#00f',
+        strokeOpacity: 0.1,
+      });
+
+    });
+  </script>
+</body>
+
 </html>
