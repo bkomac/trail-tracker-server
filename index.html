@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Cordova Background Geolocation Tracking</title>
+  <title>TrailTracker Geolocation Tracking</title>
   <meta name="viewport" content="initial-scale=1.0">
   <meta charset="utf-8">
   <style>
@@ -16,6 +16,10 @@
     #map {
       height: 100%;
     }
+
+    #content {
+      width: 250px
+    }
   </style>
 </head>
 
@@ -23,11 +27,12 @@
   <div id="map"></div>
   <script src="//maps.googleapis.com/maps/api/js?key=AIzaSyD-wFd-ug2VziTX-nwnp4n1PlsMwPA_UxM"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://momentjs.com/downloads/moment-with-locales.min.js"></script>
   <script>
     var lastLocation = {};
     var previousLocation = {};
-    var lastMarker = {};
-    var accurracyMarker = {};
+    var lastMarkers = [];
+    var accurracyMarkers = [];
     var color = "#ff0000";
     var allMarkers = [];
     var map = new google.maps.Map(document.getElementById('map'), {
@@ -38,51 +43,134 @@
     socket.on('locations', function (locations) {
       locations = locations || [];
       var markers = locations.map(function (location) {
-        console.log(new Date() + "loc: " + JSON.stringify(location));
-        lastLocation = location;
-        color = location.color;
-        var marker = new google.maps.Marker({
-          position: { lat: location.lat, lng: location.lon },
-          map: map,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            fillColor: '#f00',
-            fillOpacity: 0.1,
-            strokeColor: '#f00',
-            strokeOpacity: 0.6,
-            strokeWeight: 1,
-            scale: 3
-          }
-        });
-        map.setCenter(marker.getPosition());
+
+        lastLocation = {
+          position: location,
+          timestamp: new Date().getTime()
+        };
+        console.log(new Date() + "loc: " + JSON.stringify(lastLocation));
+        var marker = [];
+        marker[lastLocation.position.user.uuid] = addPathistoryMarker(lastLocation);
+        map.setCenter({ lat: location.lat, lng: location.lon });
+
         return marker;
       });
       allMarkers = allMarkers.concat(markers);
-      console.log("color=" + color);
+
       try {
-        lastMarker.setMap(null);
-        accurracyMarker.setMap(null);
+        lastMarkers[lastLocation.position.user.uuid].setMap(null);
+        accurracyMarkers[lastLocation.position.user.uuid].setMap(null);
       } catch (e) {
       }
 
-      lastMarker = new google.maps.Marker({
-        position: { lat: lastLocation.lat, lng: lastLocation.lon },
-        map: map,
-        draggable: true,
-        color: "#00ff00"
-      });
+      lastMarkers[lastLocation.position.user.uuid] = addLastMarker(lastLocation);
+      accurracyMarkers[lastLocation.position.user.uuid] = addAccuracyMarker(lastLocation);
 
-      accurracyMarker = new google.maps.Circle({
-        center: { lat: lastLocation.lat, lng: lastLocation.lon },
-        radius: lastLocation.accuracy,
+    }); //---
+
+    function addAccuracyMarker(location) {
+      var marker = new google.maps.Circle({
+        center: { lat: location.position.lat, lng: location.position.lon },
+        radius: location.accuracy,
         map: map,
         fillColor: '#00f',
         fillOpacity: 0.05,
         strokeColor: '#00f',
         strokeOpacity: 0.1,
       });
+      return marker;
+    };
 
-    });
+    function addPathistoryMarker(location) {
+      var marker = new google.maps.Marker({
+        position: { lat: location.position.lat, lng: location.position.lon },
+        map: map,
+        draggable: false,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: '#f00',
+          fillOpacity: 0.6,
+          strokeColor: '#f00',
+          strokeOpacity: 0,
+          strokeWeight: 0,
+          scale: 3
+        },
+        animation: google.maps.Animation.DROP
+      });
+
+      var int = setInterval(function () {
+        marker.set("fillOpacity", marker.get("fillOpacity") - 0.03);
+        console.log(marker.get("fillOpacity"));
+      }, 50000);
+
+      setTimeout(function () {
+        marker.setMap(null);
+        delete marker;
+        clearInterval(int);
+      }, 500000);
+      return marker;
+    };
+
+    function addLastMarker(location) {
+
+      var title = moment(new Date(location.timestamp)).fromNow();
+
+      var marker = new google.maps.Marker({
+        position: { lat: location.position.lat, lng: location.position.lon },
+        map: map,
+        draggable: true,
+        color: "#00ff00",
+        title: title,
+        label: location.position.user.name.substring(0, 1) || '',
+        animation: google.maps.Animation.DROP
+      });
+
+      var infowindow = new google.maps.InfoWindow({
+        content: '<div id="content">' +
+          '<div id="siteNotice">' + title +
+          '</div>' +
+          '<h1 id="firstHeading" class="firstHeading">Last location, ' + location.position.user.name + '</h1>' +
+          '<div id="bodyContent">' +
+          '<p><b>Activity type:</b> ' + location.position.activity.type + ' (' + location.position.activity.confidence + '%)</p>' +
+          '<p><b>Speed:</b> ' + location.position.speed + ' km/h</p>' +
+          '<p><b>Altitude:</b> ' + location.position.altitude + ' m</p>' +
+          '<p><b>Battery level:</b> ' + location.position.battery.level + '%</p>' +
+          '</div>' +
+          '</div>'
+      });
+
+      var int = setInterval(function () {
+        title = moment(new Date(location.timestamp)).fromNow();
+        //console.log(title);
+        marker.set("title", title);
+
+        infowindow = new google.maps.InfoWindow({
+          content: '<div id="content">' +
+            '<div id="siteNotice">' + title +
+            '</div>' +
+            '<h1 id="firstHeading" class="firstHeading">Last location, ' + location.position.user.name + '</h1>' +
+            '<div id="bodyContent">' +
+            '<p><b>Activity type:</b> ' + location.position.activity.type + ' (' + location.position.activity.confidence + '%)</p>' +
+            '<p><b>Speed:</b> ' + location.position.speed + ' km/h</p>' +
+            '<p><b>Altitude:</b> ' + location.position.altitude + ' m</p>' +
+            '<p><b>Battery level:</b> ' + location.position.battery.level + '%</p>' +
+            '<p><b>Last seen:</b> ' + moment(new Date(location.timestamp)).format('lll') + '</p>' +
+            '</div>' +
+            '</div>'
+        });
+
+        marker.addListener('click', function () {
+          infowindow.open(map, marker);
+        });
+
+      }, 10000);
+
+      marker.addListener('click', function () {
+        infowindow.open(map, marker);
+      });
+
+      return marker;
+    };
   </script>
 </body>
 
