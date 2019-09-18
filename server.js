@@ -15,17 +15,19 @@ app.all('/*', function (req, res, next) {
 });
 
 app.get('/', function (req, res) {
-  res.sendFile(__dirname + '/index.html');
 
-  for (var i = 0; i < lastLocations.length; i++) {
-    console.log('---:' + i);
-  }
+  console.log('Headers:\n', req.headers);
 
   setTimeout(function () {
-    console.log('emit :' + JSON.stringify(lastLocations));
-    io.emit('locations', lastLocations);
+    for (var prop in lastLocations) {
+      if (lastLocations.hasOwnProperty(prop)) {
+        console.log(prop + ' -> ', lastLocations[prop]);
+        io.emit('locations', lastLocations[prop]);
+      }
+    }
   }, 2000);
-  
+
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.post('/locations', function (request, response) {
