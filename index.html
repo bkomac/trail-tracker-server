@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>TrailTracker Geolocation Tracking</title>
+  <title>Trail Tracker Geolocation Tracking</title>
   <meta name="viewport" content="initial-scale=1.0">
   <meta charset="utf-8">
   <style>
@@ -71,12 +71,13 @@
     function addAccuracyMarker(location) {
       var marker = new google.maps.Circle({
         center: { lat: location.position.lat, lng: location.position.lon },
-        radius: location.accuracy,
+        radius: location.position.accuracy,
         map: map,
         fillColor: '#00f',
-        fillOpacity: 0.05,
+        fillOpacity: 0.03,
         strokeColor: '#00f',
-        strokeOpacity: 0.1,
+        strokeOpacity: 0.09,
+        strokeWeight: 1
       });
       return marker;
     };
@@ -86,10 +87,11 @@
         position: { lat: location.position.lat, lng: location.position.lon },
         map: map,
         draggable: false,
+        title: location.position.user.name + " " + moment(new Date(location.position.time)).fromNow(),
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           fillColor: '#f00',
-          fillOpacity: 0.3,
+          fillOpacity: 0.5,
           strokeColor: '#f00',
           strokeOpacity: 0,
           strokeWeight: 0,
@@ -98,22 +100,26 @@
         animation: google.maps.Animation.DROP
       });
 
-      var int = setInterval(function () {
-        marker.set("fillOpacity", marker.get("fillOpacity") - 0.03);
-        console.log(marker.get("fillOpacity"));
-      }, 50000);
+      // var int = setInterval(function () {
+      //   marker.icon.fillOpacity = (marker.icon.fillOpacity - 0.03).toFixed(2);
+      //   if (marker.icon.fillOpacity < 0.1) {
+      //     marker.icon.fillOpacity = 0.1;
+      //     clearInterval(int);
+      //   }
+      //   console.log("opacy:" + marker.icon.fillOpacity);
+      // }, 10000);
 
       setTimeout(function () {
         marker.setMap(null);
         delete marker;
         clearInterval(int);
-      }, 500000);
+      }, 3600000);
       return marker;
     };
 
     function addLastMarker(location) {
 
-      var title = moment(new Date(location.timestamp)).fromNow();
+      var title = moment(new Date(location.position.time)).fromNow();
 
       var marker = new google.maps.Marker({
         position: { lat: location.position.lat, lng: location.position.lon },
@@ -135,12 +141,13 @@
           '<p><b>Speed:</b> ' + location.position.speed + ' km/h</p>' +
           '<p><b>Altitude:</b> ' + location.position.altitude + ' m</p>' +
           '<p><b>Battery level:</b> ' + location.position.battery.level + '%</p>' +
+          '<p><b>Last seen:</b> ' + moment(new Date(location.position.time)).format('lll') + '</p>' +
           '</div>' +
           '</div>'
       });
 
       var int = setInterval(function () {
-        title = moment(new Date(location.timestamp)).fromNow();
+        title = moment(new Date(location.position.time)).fromNow();
         //console.log(title);
         marker.set("title", title);
 
@@ -154,7 +161,7 @@
             '<p><b>Speed:</b> ' + location.position.speed + ' km/h</p>' +
             '<p><b>Altitude:</b> ' + location.position.altitude + ' m</p>' +
             '<p><b>Battery level:</b> ' + location.position.battery.level + '%</p>' +
-            '<p><b>Last seen:</b> ' + moment(new Date(location.timestamp)).format('lll') + '</p>' +
+            '<p><b>Last seen:</b> ' + moment(new Date(location.position.time)).format('lll') + '</p>' +
             '</div>' +
             '</div>'
         });
