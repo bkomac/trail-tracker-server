@@ -31,6 +31,7 @@ app.get('/', function (req, res) {
 });
 
 app.post('/locations', function (request, response) {
+  console.log('--------------locations----------------');
   console.log('Headers:\n', request.headers);
   console.log('Locations:\n', request.body);
   console.log('------------------------------', request.body[0].user);
@@ -43,13 +44,14 @@ app.post('/locations', function (request, response) {
 
   lastLocations[request.body[0].user.uuid] = request.body;
 
-  console.log('Last loc :' + JSON.stringify(lastLocations[request.body[0].user.uuid]));
+ // console.log('Last loc :' + JSON.stringify(lastLocations[request.body[0].user.uuid]));
 
   io.emit('locations', request.body);
   response.sendStatus(200);
 });
 
 app.post('/sync', function (request, response) {
+  console.log('------------sync------------------');
   console.log('Headers:\n', request.headers);
   console.log('Synced Locations:\n', request.body);
   console.log('------------------------------');
@@ -71,7 +73,7 @@ io.on('connection', function (socket) {
 
   for (var prop in lastLocations) {
     if (lastLocations.hasOwnProperty(prop)) {
-      console.log(prop + ' -> ', lastLocations[prop]);
+      console.log(prop + ' -> ', lastLocations[prop].length);
       io.emit('locations', lastLocations[prop]);
     }
   }

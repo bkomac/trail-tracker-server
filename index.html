@@ -48,7 +48,7 @@
           position: location,
           timestamp: new Date().getTime()
         };
-        console.log(new Date() + "loc: " + JSON.stringify(lastLocation));
+        console.log(new Date() + "loc: ", lastLocation);
         var marker = [];
         marker[lastLocation.position.user.uuid] = addPathistoryMarker(lastLocation);
         map.setCenter({ lat: location.lat, lng: location.lon });
@@ -83,6 +83,11 @@
     };
 
     function addPathistoryMarker(location) {
+      var pointColor = '#f00';
+      if (location.position.backSync) {
+        pointColor = '#00f';
+      }
+
       var marker = new google.maps.Marker({
         position: { lat: location.position.lat, lng: location.position.lon },
         map: map,
@@ -90,9 +95,9 @@
         title: location.position.user.name + " " + moment(new Date(location.position.time)).fromNow(),
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          fillColor: '#f00',
+          fillColor: pointColor,
           fillOpacity: 0.5,
-          strokeColor: '#f00',
+          strokeColor: pointColor,
           strokeOpacity: 0,
           strokeWeight: 0,
           scale: 3
@@ -112,7 +117,7 @@
       setTimeout(function () {
         marker.setMap(null);
         delete marker;
-        clearInterval(int);
+        //clearInterval(int);
       }, 3600000);
       return marker;
     };
