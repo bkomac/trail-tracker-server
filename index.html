@@ -68,6 +68,12 @@
 
     }); //---
 
+    socket.on('action', function (action) {
+        console.log("action: ",action);
+
+
+    });//--
+
     function addAccuracyMarker(location) {
       var marker = new google.maps.Circle({
         center: { lat: location.position.lat, lng: location.position.lon },

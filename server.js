@@ -30,11 +30,50 @@ app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html');
 });
 
+app.post('/headless', function (request, response) {
+  console.log('--------------headless----------------');
+  console.log('Headers:\n', request.headers);
+  console.log('Locations:\n', request.body);
+  console.log('------------------------------', request.body[0].user);
+
+
+  console.log('Last loc :' + JSON.stringify(request.body[0]));
+
+
+
+  io.emit('locations', request.body);
+  response.sendStatus(200);
+});
+
+app.post('/action', function (request, response) {
+  console.log('-------------- action ----------------');
+  console.log('Headers:\n', request.headers);
+  console.log('action:\n', request.body);
+  console.log('------------------------------');
+
+  io.emit('action', request.body);
+  response.sendStatus(200);
+});
+
+app.post('/location', function (request, response) {
+  console.log('-------------- location ----------------');
+  console.log('Headers:\n', request.headers);
+  console.log('location:\n', request.body);
+  console.log('------------------------------');
+
+  lastLocations[request.body.user.uuid] = request.body;
+
+  io.emit('location', request.body);
+  response.sendStatus(200);
+});
+
 app.post('/locations', function (request, response) {
   console.log('--------------locations----------------');
   console.log('Headers:\n', request.headers);
   console.log('Locations:\n', request.body);
   console.log('------------------------------', request.body[0].user);
+
+  request.body.slice(-1);
 
   var i = 0;
   for (var loc in request.body) {
@@ -42,9 +81,15 @@ app.post('/locations', function (request, response) {
     i++;
   }
 
-  lastLocations[request.body[0].user.uuid] = request.body;
+  //lastLocations[request.body[0].user.uuid] = request.body;
 
- // console.log('Last loc :' + JSON.stringify(lastLocations[request.body[0].user.uuid]));
+  // console.log('Last loc :' + JSON.stringify(lastLocations[request.body[0].user.uuid]));
+
+  var channel = request.headers['x-channel'];
+  if (channel !== undefined || channel != "")
+    channel = channel + "/";
+  else
+    channel = "";
 
   io.emit('locations', request.body);
   response.sendStatus(200);
@@ -63,6 +108,12 @@ app.post('/sync', function (request, response) {
   }
 
   lastLocations[request.body[0].user.uuid] = request.body;
+
+  var channel = request.headers['x-channel'];
+  if (channel != undefined || channel != "")
+    channel = channel + "/";
+  else
+    channel = "";
 
   io.emit('locations', request.body);
   response.sendStatus(200);
