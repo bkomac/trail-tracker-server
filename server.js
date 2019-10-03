@@ -47,9 +47,11 @@ app.post('/headless', function (request, response) {
 
 app.post('/action', function (request, response) {
   console.log('-------------- action ----------------');
-  console.log('Headers:\n', request.headers);
-  console.log('action:\n', request.body);
+  console.log('Headers:\n'+ JSON.stringify(request.headers));
+  console.log('action:\n'+ JSON.stringify(request.body));
   console.log('------------------------------');
+
+  lastLocations[request.body.user.uuid] = request.body;
 
   io.emit('action', request.body);
   response.sendStatus(200);
@@ -57,8 +59,8 @@ app.post('/action', function (request, response) {
 
 app.post('/location', function (request, response) {
   console.log('-------------- location ----------------');
-  console.log('Headers:\n', request.headers);
-  console.log('location:\n', request.body);
+  console.log('Headers:\n' + JSON.stringify(request.headers));
+  console.log('location:\n', JSON.stringify(request.body));
   console.log('------------------------------');
 
   lastLocations[request.body.user.uuid] = request.body;
@@ -67,7 +69,7 @@ app.post('/location', function (request, response) {
   response.sendStatus(200);
 });
 
-app.post('/locations', function (request, response) {
+app.post('/locationsX', function (request, response) {
   console.log('--------------locations----------------');
   console.log('Headers:\n', request.headers);
   console.log('Locations:\n', request.body);
@@ -95,7 +97,7 @@ app.post('/locations', function (request, response) {
   response.sendStatus(200);
 });
 
-app.post('/sync', function (request, response) {
+app.post('/syncX', function (request, response) {
   console.log('------------sync------------------');
   console.log('Headers:\n', request.headers);
   console.log('Synced Locations:\n', request.body);
@@ -124,8 +126,8 @@ io.on('connection', function (socket) {
 
   for (var prop in lastLocations) {
     if (lastLocations.hasOwnProperty(prop)) {
-      console.log(prop + ' -> ', lastLocations[prop].length);
-      io.emit('locations', lastLocations[prop]);
+      console.log(prop + ' -> ', lastLocations[prop]);
+      io.emit('location', lastLocations[prop]);
     }
   }
 
