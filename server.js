@@ -1,4 +1,5 @@
 var app = require('express')();
+
 var bodyParser = require('body-parser');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
@@ -6,7 +7,7 @@ var io = require('socket.io')(http);
 global.lastLocations = [];
 
 // parse application/json
-app.use(bodyParser.json({ type: '*/*' })); // force json
+app.use(bodyParser.json({ type: '*/*', limit: "50mb" })); // force json
 
 app.all('/*', function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -51,7 +52,7 @@ app.post('/action', function (request, response) {
   console.log('action:\n'+ JSON.stringify(request.body));
   console.log('------------------------------');
 
-  lastLocations[request.body.user.uuid] = request.body;
+  //lastLocations[request.body.user.uuid] = request.body;
 
   io.emit('action', request.body);
   response.sendStatus(200);
@@ -64,7 +65,7 @@ app.post('/location', function (request, response) {
   console.log('------------------------------');
 
   lastLocations[request.body.user.uuid] = request.body;
-
+  request.body.history = false;
   io.emit('location', request.body);
   response.sendStatus(200);
 });
@@ -127,6 +128,7 @@ io.on('connection', function (socket) {
   for (var prop in lastLocations) {
     if (lastLocations.hasOwnProperty(prop)) {
       console.log(prop + ' -> ', lastLocations[prop]);
+      lastLocations[prop].history = true;
       io.emit('location', lastLocations[prop]);
     }
   }
