@@ -48,8 +48,8 @@ app.post('/headless', function (request, response) {
 
 app.post('/action', function (request, response) {
   console.log('-------------- action ----------------');
-  console.log('Headers:\n'+ JSON.stringify(request.headers));
-  console.log('action:\n'+ JSON.stringify(request.body));
+  console.log('Headers:\n' + JSON.stringify(request.headers));
+  console.log('action:\n' + JSON.stringify(request.body));
   console.log('------------------------------');
 
   //lastLocations[request.body.user.uuid] = request.body;
@@ -123,7 +123,7 @@ app.post('/syncX', function (request, response) {
 });
 
 io.on('connection', function (socket) {
-  console.log('a user connected ');
+  console.log('a user connected ' + socket.id + " " + socket.handshake.address);
 
   for (var prop in lastLocations) {
     if (lastLocations.hasOwnProperty(prop)) {
@@ -138,3 +138,29 @@ io.on('connection', function (socket) {
 http.listen(3000, function () {
   console.log('listening on *:3000');
 });
+
+
+function exitHandler(options, err) {
+  if (options.cleanup) {
+    console.log('** server closing down ...');
+  }
+  if (err)
+    console.log(err.stack);
+  if (options.exit)
+    process.exit();
+}
+
+// do something when app is closing
+process.on('exit', exitHandler.bind(null, {
+  cleanup: true
+}));
+
+// catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, {
+  exit: true
+}));
+
+// catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, {
+  exit: true
+}));
