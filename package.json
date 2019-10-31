@@ -15,6 +15,7 @@
     "express": "^4.14.0",
     "line-by-line": "^0.1.5",
     "moment": "^2.24.0",
+    "parse-gpx": "^1.2.0",
     "socket.io": "^1.4.8"
   }
 }

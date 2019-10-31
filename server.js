@@ -4,6 +4,16 @@ var bodyParser = require('body-parser');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+const parseGpx = require('parse-gpx');
+var sabotinGpx = {};
+
+let file = './gpx/Sabotin_28km.GPX';
+
+parseGpx(file).then(track => {
+  console.log("gpx loaded..."); 
+  sabotinGpx = track;
+});
+
 global.lastLocations = [];
 
 // parse application/json
@@ -132,6 +142,8 @@ io.on('connection', function (socket) {
       io.emit('location', lastLocations[prop]);
     }
   }
+
+  io.emit('gpx', sabotinGpx);
 
 });
 
