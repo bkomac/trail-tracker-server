@@ -1,0 +1,7 @@
+version: "3"
+services:
+  tracker-server:
+    container_name: "tracker-server"
+    build: .
+    ports:
+     - "3000:3000"
